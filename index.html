@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sophos Integration — SG to XGS Migration</title>
+<style>
+:root{
+  --bg:#0b1220;--panel:#121b2d;--panel2:#18233a;--text:#eef4ff;--muted:#95a4c4;
+  --line:#26334d;--accent:#68a0ff;--good:#2fb171;--warn:#e0a93b;--bad:#df5d5d;
+}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#09101d,#10192a);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:28px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:20px}
+.title{font-size:30px;font-weight:800}.sub{color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.22)}
+.panel h2{margin:0 0 14px;font-size:18px}.muted{color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:12px;padding:11px 14px;background:#273553;color:var(--text);font-weight:700;cursor:pointer}.btn.primary{background:var(--accent);color:#07111f}.btn.good{background:var(--good);color:#07150e}.btn:disabled{opacity:.55;cursor:not-allowed}
+.status,.result{margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0f1727;color:var(--muted);white-space:pre-wrap}
+.status.ok{color:#b9f2cf;border-color:rgba(47,177,113,.45)} .status.err{color:#ffc0c0;border-color:rgba(223,93,93,.45)} .status.info{color:#c9dbff;border-color:rgba(104,160,255,.4)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.kpi{padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)} .kpi .n{font-size:26px;font-weight:800}.kpi .t{color:var(--muted);font-size:12px}
+.list{margin-top:14px;display:grid;gap:10px;max-height:420px;overflow:auto}.item{padding:12px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)} .item b{display:block;margin-bottom:4px}
+.note{margin-top:14px;color:#d6c18d;background:rgba(224,169,59,.1);border:1px solid rgba(224,169,59,.28);padding:12px 14px;border-radius:12px}
+@media (max-width:980px){.grid,.form-grid,.kpis{grid-template-columns:1fr}.wrap{padding:18px}.title{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="title">Sophos Integration</div>
+      <div class="sub">Migrate Sophos SG firewall rules into Sophos XGS with separate connection settings for each firewall.</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Source firewall — Sophos SG</h2>
+      <div class="form-grid">
+        <div><label for="sg-host">IP / host</label><input id="sg-host" placeholder="192.168.0.1"></div>
+        <div><label for="sg-port">Port</label><input id="sg-port" type="number" placeholder="4444"></div>
+        <div><label for="sg-user">Username</label><input id="sg-user" placeholder="admin"></div>
+        <div><label for="sg-pass">Password</label><input id="sg-pass" type="password" placeholder="password"></div>
+        <div class="full"><label for="sg-token">API token</label><input id="sg-token" placeholder="token for SG REST API"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="save-config">Save settings</button>
+        <button class="btn" id="test-sg">Test SG connection</button>
+      </div>
+      <div class="status" id="sg-status">SG settings are ready.</div>
+    </section>
+
+    <section class="panel">
+      <h2>Target firewall — Sophos XGS</h2>
+      <div class="form-grid">
+        <div><label for="xgs-host">IP / host</label><input id="xgs-host" placeholder="192.168.0.2"></div>
+        <div><label for="xgs-port">Port</label><input id="xgs-port" type="number" placeholder="5553"></div>
+        <div><label for="xgs-user">Username</label><input id="xgs-user" placeholder="admin"></div>
+        <div><label for="xgs-pass">Password</label><input id="xgs-pass" type="password" placeholder="password"></div>
+        <div class="full"><label for="xgs-token">Token / note</label><input id="xgs-token" placeholder="optional"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="test-xgs">Test XGS connection</button>
+        <button class="btn primary" id="preview">Preview migration</button>
+        <button class="btn good" id="migrate">Migrate to XGS</button>
+      </div>
+      <div class="status" id="xgs-status">XGS settings are ready.</div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:18px">
+    <h2>Migration preview</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="n" id="k-policy-total">0</div><div class="t">Policies ready / selected</div></div>
+      <div class="kpi"><div class="n" id="k-object-total">0</div><div class="t">Objects to create / reuse</div></div>
+      <div class="kpi"><div class="n" id="k-nat-total">0</div><div class="t">NAT rules ready</div></div>
+    </div>
+    <div class="note">This preview now separates migration into three groups: policies, objects, and NAT rules. Policies are selectable. Objects are derived from policy/NAT dependencies. NAT rules are shown separately.</div>
+    <div class="grid" style="margin-top:16px">
+      <div>
+        <div class="muted" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span>Policies selected to migrate</span>
+          <label style="display:flex;align-items:center;gap:8px;margin:0;color:var(--text)"><input id="select-all-rules" type="checkbox" style="width:auto"> Select all eligible policies</label>
+        </div>
+        <div class="list" id="ready-list"></div>
+      </div>
+      <div>
+        <div class="muted">Policies not selected / need review</div>
+        <div class="list" id="skip-list"></div>
+      </div>
+    </div>
+    <div class="grid" style="margin-top:16px">
+      <div>
+        <div class="muted">Objects to migrate</div>
+        <div class="list" id="object-list"></div>
+      </div>
+      <div>
+        <div class="muted">NAT rules to migrate</div>
+        <div class="list" id="nat-ready-list"></div>
+        <div class="muted" style="margin-top:16px">NAT rules skipped / review</div>
+        <div class="list" id="nat-skip-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:18px">
+    <h2>XGS rules currently visible</h2>
+    <div class="muted">This refreshes after XGS connect tests and after migration, so newly created rules show up immediately.</div>
+    <div class="list" id="xgs-rules-list" style="margin-top:16px;max-height:320px"></div>
+  </section>
+
+  <section class="panel" style="margin-top:18px">
+    <h2>Migration result</h2>
+    <div class="status info" id="visibility-status">No XGS visibility check yet.</div>
+    <div class="result" id="run-result">No migration run yet.</div>
+  </section>
+</div>
+
+<script>
+const API = '';
+const $ = id => document.getElementById(id);
+let previewState = { total: 0, migratable: [], skipped: [] };
+let objectPreviewState = { total: 0, migratable: [], skipped: [] };
+let natPreviewState = { total: 0, migratable: [], skipped: [] };
+let selectedRuleNames = new Set();
+
+function dataFromForm(){
+  return {
+    sg: { host: $('sg-host').value.trim(), port: Number($('sg-port').value||4444), username: $('sg-user').value.trim(), password: $('sg-pass').value, token: $('sg-token').value.trim() },
+    xgs:{ host: $('xgs-host').value.trim(), port: Number($('xgs-port').value||5553), username: $('xgs-user').value.trim(), password: $('xgs-pass').value, token: $('xgs-token').value.trim() }
+  };
+}
+function fill(cfg){
+  const sg = cfg.sg || {}, xgs = cfg.xgs || {};
+  $('sg-host').value = sg.host || ''; $('sg-port').value = sg.port || 4444; $('sg-user').value = sg.username || ''; $('sg-pass').value = sg.password || ''; $('sg-token').value = sg.token || '';
+  $('xgs-host').value = xgs.host || ''; $('xgs-port').value = xgs.port || 5553; $('xgs-user').value = xgs.username || ''; $('xgs-pass').value = xgs.password || ''; $('xgs-token').value = xgs.token || '';
+}
+async function api(path, method='GET', body){
+  const res = await fetch(API + path, { method, headers: { 'Content-Type':'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(()=>({ ok:false, error:'Invalid JSON response' }));
+  if(!res.ok && !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+function setStatus(id, text, kind='info'){ const el=$(id); el.className='status '+kind; el.textContent=text; }
+function setVisibilityStatus(text, kind='info'){ const el=$('visibility-status'); el.className='status '+kind; el.textContent=text; }
+function ruleSummary(item){
+  const svc = item.service ? ` · service ${item.service}` : '';
+  if (item.direction === 'src') return `${item.action.toUpperCase()} source ${item.sourceLabel || item.ip}${svc}`;
+  if (item.direction === 'dst') return `${item.action.toUpperCase()} destination ${item.destinationLabel || item.ip}${svc}`;
+  if (item.direction === 'both') return `${item.action.toUpperCase()} source ${item.sourceLabel || item.sourceIp} → destination ${item.destinationLabel || item.destinationIp}${svc}`;
+  if (item.direction === 'any') return `${item.action.toUpperCase()} any source → any destination${svc || ' · any service'}`;
+  return item.reason || 'Needs review';
+}
+function escAttr(v){ return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function syncSelectAll(){
+  const eligible = previewState.migratable || [];
+  const all = $('select-all-rules');
+  if (!all) return;
+  const selectedEligible = eligible.filter(item => selectedRuleNames.has(item.name)).length;
+  all.checked = !!eligible.length && selectedEligible === eligible.length;
+  all.indeterminate = selectedEligible > 0 && selectedEligible < eligible.length;
+}
+function toggleRuleSelection(name, checked){
+  if (checked) selectedRuleNames.add(name);
+  else selectedRuleNames.delete(name);
+  renderPreview(previewState);
+}
+window.toggleRuleSelection = toggleRuleSelection;
+function renderPreview(preview){
+  previewState = preview || { total: 0, migratable: [], skipped: [] };
+  const migratable = previewState.migratable || [];
+  const skipped = previewState.skipped || [];
+  if (!selectedRuleNames.size) migratable.forEach(item => selectedRuleNames.add(item.name));
+  selectedRuleNames = new Set([...selectedRuleNames].filter(name => migratable.some(item => item.name === name)));
+  const selectedItems = migratable.filter(item => selectedRuleNames.has(item.name));
+  const unselectedEligible = migratable.filter(item => !selectedRuleNames.has(item.name)).map(item => ({ ...item, reason: 'Eligible but not selected', selectable: true }));
+  const skippedItems = [...unselectedEligible, ...skipped];
+  $('k-policy-total').textContent = selectedItems.length;
+  $('ready-list').innerHTML = selectedItems.length ? selectedItems.map(item => `
+    <div class="item">
+      <label style="display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--text)">
+        <input type="checkbox" style="width:auto;margin-top:2px" checked data-rule-name="${escAttr(item.name)}" onchange="toggleRuleSelection(this.dataset.ruleName, this.checked)">
+        <span><b>${item.name}</b><div>${ruleSummary(item)}</div></span>
+      </label>
+    </div>`).join('') : '<div class="item">Nothing selected yet.</div>';
+  $('skip-list').innerHTML = skippedItems.length ? skippedItems.map(item => `
+    <div class="item">
+      <label style="display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--text);opacity:${item.selectable === false ? '.72' : '1'}">
+        <input type="checkbox" style="width:auto;margin-top:2px" data-rule-name="${escAttr(item.name)}" ${item.selectable === false ? 'disabled' : ''} ${selectedRuleNames.has(item.name) ? 'checked' : ''} onchange="toggleRuleSelection(this.dataset.ruleName, this.checked)">
+        <span><b>${item.name}</b><div>${item.reason || ruleSummary(item)}</div></span>
+      </label>
+    </div>`).join('') : '<div class="item">Nothing to review.</div>';
+  syncSelectAll();
+}
+function renderObjectPreview(preview){
+  objectPreviewState = preview || { total: 0, migratable: [], skipped: [] };
+  $('k-object-total').textContent = objectPreviewState.total || 0;
+  $('object-list').innerHTML = (objectPreviewState.migratable || []).length
+    ? objectPreviewState.migratable.map(item => `<div class="item"><b>${item.name || 'Unnamed object'}</b><div>${item.kind || 'object'}${item.usage ? ` · ${item.usage}` : ''}</div></div>`).join('')
+    : '<div class="item">No dependent objects detected.</div>';
+}
+function renderNatPreview(preview){
+  natPreviewState = preview || { total: 0, migratable: [], skipped: [] };
+  $('k-nat-total').textContent = (natPreviewState.migratable || []).length;
+  $('nat-ready-list').innerHTML = (natPreviewState.migratable || []).length
+    ? natPreviewState.migratable.map(item => `<div class="item"><b>${item.name}</b><div>${String(item.kind || 'nat').toUpperCase()}${item.comment ? ` · ${item.comment}` : ''}</div></div>`).join('')
+    : '<div class="item">No NAT rules ready.</div>';
+  $('nat-skip-list').innerHTML = (natPreviewState.skipped || []).length
+    ? natPreviewState.skipped.map(item => `<div class="item"><b>${item.name}</b><div>${item.reason || 'Needs review'}</div></div>`).join('')
+    : '<div class="item">No NAT rules skipped.</div>';
+}
+function renderXgsRules(rules = [], highlightNames = []){
+  const el = $('xgs-rules-list');
+  const wanted = new Set((highlightNames || []).filter(Boolean));
+  const ordered = [...rules].sort((a,b) => Number(wanted.has(b.name)) - Number(wanted.has(a.name)) || String(a.name||'').localeCompare(String(b.name||'')));
+  el.innerHTML = ordered.length ? ordered.map(rule => {
+    const hit = wanted.has(rule.name);
+    const chips = [rule.action, rule.status].filter(Boolean).map(v => `<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:${hit ? 'rgba(47,177,113,.22)' : 'rgba(104,160,255,.12)'};border:1px solid ${hit ? 'rgba(47,177,113,.45)' : 'rgba(104,160,255,.28)'};margin-right:6px;font-size:11px">${v}</span>`).join('');
+    const src = (rule.sources || []).join(', ') || 'Any';
+    const dst = (rule.destinations || []).join(', ') || 'Any';
+    const desc = rule.description || '';
+    return `<div class="item" style="${hit ? 'border-color:rgba(47,177,113,.55);box-shadow:0 0 0 1px rgba(47,177,113,.18) inset;background:rgba(47,177,113,.06)' : ''}"><b>${hit ? '✓ ' : ''}${rule.name}</b><div style="margin:6px 0">${chips}</div><div>Source: ${src}</div><div>Destination: ${dst}</div>${desc ? `<div class="muted" style="margin-top:6px">${desc}</div>` : ''}</div>`;
+  }).join('') : '<div class="item">No XGS rules returned yet.</div>';
+}
+async function loadXgsRules(highlightNames = []){
+  try {
+    const data = await api('/migration/xgs-rules','POST',{ xgs:dataFromForm().xgs });
+    renderXgsRules(data.rules || [], highlightNames);
+    if (highlightNames.length) setVisibilityStatus(`Visible on XGS now: ${highlightNames.filter(name => (data.rules || []).some(rule => rule.name === name)).length}/${highlightNames.length} highlighted migrated rule(s).`, 'ok');
+    return data.rules || [];
+  } catch (e) {
+    $('xgs-rules-list').innerHTML = `<div class="item">${e.message}</div>`;
+    if (highlightNames.length) setVisibilityStatus(e.message, 'err');
+    return [];
+  }
+}
+async function loadConfig(){
+  const data = await api('/migration/config');
+  fill(data.config || {});
+}
+async function saveConfig(){
+  const data = await api('/migration/config','POST',dataFromForm());
+  fill(data.config || {});
+  setStatus('sg-status','SG settings saved.','ok');
+  setStatus('xgs-status','XGS settings saved.','ok');
+}
+async function testSG(){
+  setStatus('sg-status','Testing SG connection…');
+  try {
+    const data = await api('/migration/test-sg','POST',{ sg:dataFromForm().sg });
+    setStatus('sg-status',`Connected to SG ${data.host}. Rules visible: ${data.total_rules ?? 0}`,'ok');
+  } catch (e) { setStatus('sg-status',e.message,'err'); }
+}
+async function testXGS(){
+  setStatus('xgs-status','Testing XGS connection…');
+  try {
+    const data = await api('/migration/test-xgs','POST',{ xgs:dataFromForm().xgs });
+    setStatus('xgs-status',`Connected to XGS ${data.host}. Rules visible: ${data.total_rules ?? 0}`,'ok');
+    await loadXgsRules();
+  } catch (e) { setStatus('xgs-status',e.message,'err'); }
+}
+async function preview(){
+  $('run-result').textContent = 'Loading migration preview…';
+  try {
+    const data = await api('/migration/preview','POST',{ sg:dataFromForm().sg });
+    selectedRuleNames = new Set((data.preview?.migratable || []).map(item => item.name));
+    renderPreview(data.preview || {});
+    renderObjectPreview(data.objectPreview || {});
+    renderNatPreview(data.natPreview || {});
+    $('run-result').textContent = 'Preview loaded.';
+  } catch (e) {
+    $('run-result').textContent = e.message;
+  }
+}
+async function migrate(){
+  if(!confirm('Migrate the previewed SG rules into the XGS firewall now?')) return;
+  $('run-result').textContent = 'Running migration…';
+  setVisibilityStatus('Checking migrated rule visibility on XGS…','info');
+  try {
+    const data = await api('/migration/run','POST',{ ...dataFromForm(), selectedRules:[...selectedRuleNames] });
+    const applied = data.applied || [];
+    const failed = data.failed || [];
+    const names = applied.map(item => item.targetRule).filter(Boolean);
+    const visibility = data.visibility || { verified: [], missing: [] };
+    renderPreview((data.preview) || { total:0, migratable:[], skipped:[] });
+    renderObjectPreview(data.objectPreview || {});
+    renderNatPreview(data.natPreview || {});
+    await loadXgsRules(visibility.verified.length ? visibility.verified : names);
+    if (visibility.missing?.length) {
+      setVisibilityStatus(`Visible on XGS: ${visibility.verified.length}/${names.length}. Missing after reload: ${visibility.missing.join(', ')}`, 'err');
+    } else {
+      setVisibilityStatus(`Visible on XGS: ${visibility.verified.length}/${names.length} migrated rule(s) confirmed.`, 'ok');
+    }
+    $('run-result').textContent = JSON.stringify({ applied_count: applied.length, failed_count: failed.length, object_count: (data.objects?.ensured || []).length, nat_applied_count: (data.nat?.applied || []).length, nat_failed_count: (data.nat?.failed || []).length, visibility, applied, failed, objects: data.objects, nat: data.nat }, null, 2);
+  } catch (e) {
+    setVisibilityStatus(e.message, 'err');
+    $('run-result').textContent = e.message;
+  }
+}
+$('save-config').onclick = saveConfig;
+$('test-sg').onclick = testSG;
+$('test-xgs').onclick = testXGS;
+$('preview').onclick = preview;
+$('migrate').onclick = migrate;
+$('select-all-rules').onchange = e => {
+  if (e.target.checked) selectedRuleNames = new Set((previewState.migratable || []).map(item => item.name));
+  else selectedRuleNames = new Set();
+  renderPreview(previewState);
+};
+loadConfig().then(() => loadXgsRules()).catch(err => { $('run-result').textContent = err.message; });
+renderObjectPreview({ total: 0, migratable: [], skipped: [] });
+renderNatPreview({ total: 0, migratable: [], skipped: [] });
+</script>
+</body>
+</html>

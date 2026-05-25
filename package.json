@@ -1,0 +1,15 @@
+{
+  "name": "sophos-integration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Sophos SG to XGS migration app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "PORT=3009 node server.js",
+    "check": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

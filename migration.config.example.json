@@ -1,0 +1,18 @@
+{
+  "sg": {
+    "host": "",
+    "port": 4444,
+    "username": "",
+    "password": "",
+    "token": "",
+    "api_type": "utm"
+  },
+  "xgs": {
+    "host": "",
+    "port": 5553,
+    "username": "",
+    "password": "",
+    "token": "",
+    "api_type": "xg"
+  }
+}
