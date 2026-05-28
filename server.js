@@ -7,8 +7,8 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
-const PORT = Number(process.env.PORT || 3009);
-const HOST = process.env.HOST || '127.0.0.1';
+const PORT = Number(process.env.PORT || 10000);
+const HOST = process.env.HOST || '10.10.12.51';
 const ROOT = __dirname;
 const INDEX_HTML = path.join(ROOT, 'index.html');
 const MIGRATION_CFG_PATH = path.join(ROOT, 'migration.config.json');
@@ -818,6 +818,22 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end(e.message);
+    }
+  }
+
+  const STATIC_TYPES = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon' };
+  if (req.method === 'GET') {
+    const ext = path.extname(url.pathname).toLowerCase();
+    if (STATIC_TYPES[ext]) {
+      const filePath = path.join(ROOT, path.basename(url.pathname));
+      try {
+        const data = fs.readFileSync(filePath);
+        res.writeHead(200, { 'Content-Type': STATIC_TYPES[ext], 'Cache-Control': 'public, max-age=86400' });
+        return res.end(data);
+      } catch (_) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('Not found');
+      }
     }
   }
 

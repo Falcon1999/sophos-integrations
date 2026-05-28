@@ -3,123 +3,490 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sophos Integration — SG to XGS Migration</title>
+<title>Sophos Migration — SG to XGS</title>
 <style>
-:root{
-  --bg:#0b1220;--panel:#121b2d;--panel2:#18233a;--text:#eef4ff;--muted:#95a4c4;
-  --line:#26334d;--accent:#68a0ff;--good:#2fb171;--warn:#e0a93b;--bad:#df5d5d;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #f2f4f7;
+  --surface: #ffffff;
+  --surface2: #f7f8fa;
+  --surface3: #eef0f4;
+  --border: #dde1e9;
+  --border2: #c8cdd8;
+  --text: #0f1f3d;
+  --text2: #4a5672;
+  --text3: #8892a8;
+  --accent: #0053b3;
+  --accent-hover: #003d87;
+  --accent-dim: rgba(0,83,179,.08);
+  --accent-glow: rgba(0,83,179,.18);
+  --good: #1a8a4a;
+  --good-dim: rgba(26,138,74,.09);
+  --warn: #b06d00;
+  --bad: #c0392b;
+  --bad-dim: rgba(192,57,43,.09);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(15,31,61,.08);
+  --shadow-sm: 0 1px 4px rgba(15,31,61,.06);
 }
-*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#09101d,#10192a);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
-.wrap{max-width:1280px;margin:0 auto;padding:28px}
-.top{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:20px}
-.title{font-size:30px;font-weight:800}.sub{color:var(--muted)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.22)}
-.panel h2{margin:0 0 14px;font-size:18px}.muted{color:var(--muted)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}
-label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
-input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:12px;padding:11px 14px;background:#273553;color:var(--text);font-weight:700;cursor:pointer}.btn.primary{background:var(--accent);color:#07111f}.btn.good{background:var(--good);color:#07150e}.btn:disabled{opacity:.55;cursor:not-allowed}
-.status,.result{margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0f1727;color:var(--muted);white-space:pre-wrap}
-.status.ok{color:#b9f2cf;border-color:rgba(47,177,113,.45)} .status.err{color:#ffc0c0;border-color:rgba(223,93,93,.45)} .status.info{color:#c9dbff;border-color:rgba(104,160,255,.4)}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.kpi{padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)} .kpi .n{font-size:26px;font-weight:800}.kpi .t{color:var(--muted);font-size:12px}
-.list{margin-top:14px;display:grid;gap:10px;max-height:420px;overflow:auto}.item{padding:12px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)} .item b{display:block;margin-bottom:4px}
-.note{margin-top:14px;color:#d6c18d;background:rgba(224,169,59,.1);border:1px solid rgba(224,169,59,.28);padding:12px 14px;border-radius:12px}
-@media (max-width:980px){.grid,.form-grid,.kpis{grid-template-columns:1fr}.wrap{padding:18px}.title{font-size:24px}}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Layout ── */
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 0 60px; }
+
+/* ── Top nav bar (Sophos style) ── */
+.topbar {
+  background: #0053b3;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.sophos-wordmark {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -.4px;
+}
+.brand-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,.3);
+  margin: 0 4px;
+}
+.elim-logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+
+/* ── Page content area ── */
+.page-body { padding: 32px 32px 0; }
+
+/* ── Language switcher ── */
+.lang-switcher {
+  display: flex;
+  gap: 3px;
+  background: rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 3px;
+}
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,.8);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.lang-btn:hover { color: #fff; background: rgba(255,255,255,.15); }
+.lang-btn.active { background: #fff; color: #0053b3; }
+
+/* ── Page header ── */
+.header {
+  margin-bottom: 28px;
+}
+.header h1 { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -.2px; }
+.header p { color: var(--text2); font-size: 13px; margin-top: 4px; }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+.card + .card, .card-stack { margin-top: 16px; }
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--text2);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── Form ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .3px; text-transform: uppercase; }
+.form-input {
+  width: 100%;
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+.form-input::placeholder { color: var(--text3); }
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ── Buttons ── */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  outline: none;
+  white-space: nowrap;
+}
+.btn-ghost { background: var(--surface); color: var(--text2); border: 1px solid var(--border2); }
+.btn-ghost:hover { color: var(--text); border-color: var(--accent); background: var(--accent-dim); }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 1px 4px rgba(0,83,179,.25); }
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(0,83,179,.35); }
+.btn-success { background: var(--good); color: #fff; box-shadow: 0 1px 4px rgba(26,138,74,.25); }
+.btn-success:hover { filter: brightness(1.08); box-shadow: 0 2px 8px rgba(26,138,74,.35); }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none !important; }
+
+/* ── Status pill ── */
+.status-bar {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .2s;
+}
+.status-bar::before { content: '●'; font-size: 8px; flex-shrink: 0; }
+.status-bar.ok { color: #166534; border-color: rgba(26,138,74,.3); background: var(--good-dim); }
+.status-bar.ok::before { color: var(--good); }
+.status-bar.err { color: #7f1d1d; border-color: rgba(192,57,43,.3); background: var(--bad-dim); }
+.status-bar.err::before { color: var(--bad); }
+.status-bar.info { color: #1e3a6e; border-color: rgba(0,83,179,.25); background: var(--accent-dim); }
+.status-bar.info::before { color: var(--accent); }
+
+/* ── KPIs ── */
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--accent-dim);
+  border: 1px solid rgba(0,83,179,.15);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+}
+.kpi-value { font-size: 28px; font-weight: 800; color: var(--accent); line-height: 1; }
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; margin-top: 6px; }
+
+/* ── Notice banner ── */
+.notice {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: #78450a;
+  margin-bottom: 20px;
+  line-height: 1.55;
+}
+
+/* ── Section label ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-label label { display: flex; align-items: center; gap: 7px; color: var(--text2); text-transform: none; letter-spacing: 0; font-size: 12px; cursor: pointer; }
+.section-label input[type=checkbox] { width: auto; accent-color: var(--accent); }
+
+/* ── Rule / item list ── */
+.rule-list {
+  display: grid;
+  gap: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.rule-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.rule-item:hover { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.rule-item.highlighted {
+  border-color: rgba(26,138,74,.45);
+  background: var(--good-dim);
+}
+.rule-item-label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.rule-item-label input[type=checkbox] { width: auto; margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.rule-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.rule-detail { font-size: 12px; color: var(--text2); }
+.rule-empty { padding: 16px; text-align: center; color: var(--text3); font-size: 13px; background: var(--surface2); border: 1px dashed var(--border); border-radius: var(--radius-sm); }
+
+/* ── Chips ── */
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 5px;
+  border: 1px solid;
+}
+.chip-default { background: var(--accent-dim); border-color: rgba(0,83,179,.2); color: var(--accent); }
+.chip-good { background: var(--good-dim); border-color: rgba(26,138,74,.25); color: var(--good); }
+
+/* ── Result box ── */
+.result-box {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  color: var(--text2);
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+
+@media (max-width: 860px) {
+  .grid-2, .form-grid, .kpi-row { grid-template-columns: 1fr; }
+  .page-body { padding: 20px 16px; }
+  .topbar { padding: 0 16px; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div>
-      <div class="title">Sophos Integration</div>
-      <div class="sub">Migrate Sophos SG firewall rules into Sophos XGS with separate connection settings for each firewall.</div>
+<!-- Top navigation bar -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="sophos-wordmark">Sophos</span>
+    <div class="brand-divider"></div>
+    <img alt="elim.net" class="elim-logo" src="data:image/png;base64,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" />
+  </div>
+  <div class="topbar-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lang-ko" onclick="setLang('ko')">한국어</button>
     </div>
   </div>
-
-  <div class="grid">
-    <section class="panel">
-      <h2>Source firewall — Sophos SG</h2>
-      <div class="form-grid">
-        <div><label for="sg-host">IP / host</label><input id="sg-host" placeholder="192.168.0.1"></div>
-        <div><label for="sg-port">Port</label><input id="sg-port" type="number" placeholder="4444"></div>
-        <div><label for="sg-user">Username</label><input id="sg-user" placeholder="admin"></div>
-        <div><label for="sg-pass">Password</label><input id="sg-pass" type="password" placeholder="password"></div>
-        <div class="full"><label for="sg-token">API token</label><input id="sg-token" placeholder="token for SG REST API"></div>
-      </div>
-      <div class="actions">
-        <button class="btn" id="save-config">Save settings</button>
-        <button class="btn" id="test-sg">Test SG connection</button>
-      </div>
-      <div class="status" id="sg-status">SG settings are ready.</div>
-    </section>
-
-    <section class="panel">
-      <h2>Target firewall — Sophos XGS</h2>
-      <div class="form-grid">
-        <div><label for="xgs-host">IP / host</label><input id="xgs-host" placeholder="192.168.0.2"></div>
-        <div><label for="xgs-port">Port</label><input id="xgs-port" type="number" placeholder="5553"></div>
-        <div><label for="xgs-user">Username</label><input id="xgs-user" placeholder="admin"></div>
-        <div><label for="xgs-pass">Password</label><input id="xgs-pass" type="password" placeholder="password"></div>
-        <div class="full"><label for="xgs-token">Token / note</label><input id="xgs-token" placeholder="optional"></div>
-      </div>
-      <div class="actions">
-        <button class="btn" id="test-xgs">Test XGS connection</button>
-        <button class="btn primary" id="preview">Preview migration</button>
-        <button class="btn good" id="migrate">Migrate to XGS</button>
-      </div>
-      <div class="status" id="xgs-status">XGS settings are ready.</div>
-    </section>
-  </div>
-
-  <section class="panel" style="margin-top:18px">
-    <h2>Migration preview</h2>
-    <div class="kpis">
-      <div class="kpi"><div class="n" id="k-policy-total">0</div><div class="t">Policies ready / selected</div></div>
-      <div class="kpi"><div class="n" id="k-object-total">0</div><div class="t">Objects to create / reuse</div></div>
-      <div class="kpi"><div class="n" id="k-nat-total">0</div><div class="t">NAT rules ready</div></div>
-    </div>
-    <div class="note">This preview now separates migration into three groups: policies, objects, and NAT rules. Policies are selectable. Objects are derived from policy/NAT dependencies. NAT rules are shown separately.</div>
-    <div class="grid" style="margin-top:16px">
-      <div>
-        <div class="muted" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <span>Policies selected to migrate</span>
-          <label style="display:flex;align-items:center;gap:8px;margin:0;color:var(--text)"><input id="select-all-rules" type="checkbox" style="width:auto"> Select all eligible policies</label>
-        </div>
-        <div class="list" id="ready-list"></div>
-      </div>
-      <div>
-        <div class="muted">Policies not selected / need review</div>
-        <div class="list" id="skip-list"></div>
-      </div>
-    </div>
-    <div class="grid" style="margin-top:16px">
-      <div>
-        <div class="muted">Objects to migrate</div>
-        <div class="list" id="object-list"></div>
-      </div>
-      <div>
-        <div class="muted">NAT rules to migrate</div>
-        <div class="list" id="nat-ready-list"></div>
-        <div class="muted" style="margin-top:16px">NAT rules skipped / review</div>
-        <div class="list" id="nat-skip-list"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel" style="margin-top:18px">
-    <h2>XGS rules currently visible</h2>
-    <div class="muted">This refreshes after XGS connect tests and after migration, so newly created rules show up immediately.</div>
-    <div class="list" id="xgs-rules-list" style="margin-top:16px;max-height:320px"></div>
-  </section>
-
-  <section class="panel" style="margin-top:18px">
-    <h2>Migration result</h2>
-    <div class="status info" id="visibility-status">No XGS visibility check yet.</div>
-    <div class="result" id="run-result">No migration run yet.</div>
-  </section>
 </div>
 
+<div class="wrap">
+<div class="page-body">
+
+  <!-- Page header -->
+  <div class="header">
+    <h1 data-i18n="title">Sophos Migration</h1>
+    <p data-i18n="sub">Migrate firewall rules from Sophos SG to XGS</p>
+  </div>
+
+  <!-- Connection panels -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="badge">SG</span> <span data-i18n="sg_section">Source — Sophos SG</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_host">IP / Host</div>
+          <input class="form-input" id="sg-host" placeholder="192.168.0.1" />
+        </div>
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_port">Port</div>
+          <input class="form-input" id="sg-port" type="number" placeholder="4444" />
+        </div>
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_user">Username</div>
+          <input class="form-input" id="sg-user" placeholder="admin" />
+        </div>
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_pass">Password</div>
+          <input class="form-input" id="sg-pass" type="password" placeholder="••••••••" />
+        </div>
+        <div class="form-group full">
+          <div class="form-label" data-i18n="lbl_sg_token">API Token</div>
+          <input class="form-input" id="sg-token" placeholder="SG REST API token" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="save-config" data-i18n="btn_save">Save settings</button>
+        <button class="btn btn-ghost" id="test-sg" data-i18n="btn_test_sg">Test SG</button>
+      </div>
+      <div class="status-bar" id="sg-status" data-i18n="sg_ready">SG settings are ready.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="badge">XGS</span> <span data-i18n="xgs_section">Target — Sophos XGS</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_host">IP / Host</div>
+          <input class="form-input" id="xgs-host" placeholder="192.168.0.2" />
+        </div>
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_port">Port</div>
+          <input class="form-input" id="xgs-port" type="number" placeholder="5553" />
+        </div>
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_user">Username</div>
+          <input class="form-input" id="xgs-user" placeholder="admin" />
+        </div>
+        <div class="form-group">
+          <div class="form-label" data-i18n="lbl_pass">Password</div>
+          <input class="form-input" id="xgs-pass" type="password" placeholder="••••••••" />
+        </div>
+        <div class="form-group full">
+          <div class="form-label" data-i18n="lbl_xgs_token">Token / Note</div>
+          <input class="form-input" id="xgs-token" placeholder="optional" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="test-xgs" data-i18n="btn_test_xgs">Test XGS</button>
+        <button class="btn btn-primary" id="preview" data-i18n="btn_preview">Preview</button>
+        <button class="btn btn-success" id="migrate" data-i18n="btn_migrate">Migrate →</button>
+      </div>
+      <div class="status-bar" id="xgs-status" data-i18n="xgs_ready">XGS settings are ready.</div>
+    </div>
+  </div>
+
+  <!-- Migration Preview -->
+  <div class="card card-stack">
+    <div class="card-title" data-i18n="preview_section">Migration Preview</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-value" id="k-policy-total">0</div>
+        <div class="kpi-label" data-i18n="kpi_policy">Policies selected</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="k-object-total">0</div>
+        <div class="kpi-label" data-i18n="kpi_object">Objects</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="k-nat-total">0</div>
+        <div class="kpi-label" data-i18n="kpi_nat">NAT rules</div>
+      </div>
+    </div>
+
+    <div class="notice" data-i18n="note">This preview separates migration into three groups: policies, objects, and NAT rules. Policies are selectable. Objects are derived from policy/NAT dependencies. NAT rules are shown separately.</div>
+
+    <div class="grid-2">
+      <div>
+        <div class="section-label">
+          <span data-i18n="selected_policies">Policies to migrate</span>
+          <label><input id="select-all-rules" type="checkbox"> <span data-i18n="select_all">Select all</span></label>
+        </div>
+        <div class="rule-list" id="ready-list"></div>
+      </div>
+      <div>
+        <div class="section-label" data-i18n="not_selected">Skipped / needs review</div>
+        <div class="rule-list" id="skip-list"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="grid-2">
+      <div>
+        <div class="section-label" data-i18n="objects_to_migrate">Objects</div>
+        <div class="rule-list" id="object-list"></div>
+      </div>
+      <div>
+        <div class="section-label" data-i18n="nat_to_migrate">NAT rules</div>
+        <div class="rule-list" id="nat-ready-list"></div>
+        <div class="section-label" style="margin-top:16px" data-i18n="nat_skipped">NAT skipped</div>
+        <div class="rule-list" id="nat-skip-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- XGS Live Rules -->
+  <div class="card card-stack">
+    <div class="card-title" data-i18n="xgs_visible_section">XGS Rules — Live View</div>
+    <div style="color:var(--text3);font-size:12.5px;margin-bottom:14px" data-i18n="xgs_visible_sub">Refreshes after connection tests and migration runs.</div>
+    <div class="rule-list" id="xgs-rules-list" style="max-height:300px"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="card card-stack">
+    <div class="card-title" data-i18n="result_section">Migration Result</div>
+    <div class="status-bar info" id="visibility-status" data-i18n="no_visibility">No XGS visibility check yet.</div>
+    <div class="result-box" id="run-result" data-i18n="no_migration">No migration run yet.</div>
+  </div>
+
+</div><!-- /.page-body -->
+</div><!-- /.wrap -->
 <script>
 const API = '';
 const $ = id => document.getElementById(id);
@@ -128,189 +495,327 @@ let objectPreviewState = { total: 0, migratable: [], skipped: [] };
 let natPreviewState = { total: 0, migratable: [], skipped: [] };
 let selectedRuleNames = new Set();
 
-function dataFromForm(){
+const LANG = {
+  en: {
+    title: 'Sophos Migration',
+    sub: 'Migrate firewall rules from Sophos SG to XGS',
+    sg_section: 'Source — Sophos SG',
+    xgs_section: 'Target — Sophos XGS',
+    lbl_host: 'IP / Host',
+    lbl_port: 'Port',
+    lbl_user: 'Username',
+    lbl_pass: 'Password',
+    lbl_sg_token: 'API Token',
+    lbl_xgs_token: 'Token / Note',
+    btn_save: 'Save settings',
+    btn_test_sg: 'Test SG',
+    btn_test_xgs: 'Test XGS',
+    btn_preview: 'Preview',
+    btn_migrate: 'Migrate →',
+    sg_ready: 'SG settings are ready.',
+    xgs_ready: 'XGS settings are ready.',
+    preview_section: 'Migration Preview',
+    kpi_policy: 'Policies selected',
+    kpi_object: 'Objects',
+    kpi_nat: 'NAT rules',
+    note: 'This preview separates migration into three groups: policies, objects, and NAT rules. Policies are selectable. Objects are derived from policy/NAT dependencies. NAT rules are shown separately.',
+    selected_policies: 'Policies to migrate',
+    select_all: 'Select all',
+    not_selected: 'Skipped / needs review',
+    objects_to_migrate: 'Objects',
+    nat_to_migrate: 'NAT rules',
+    nat_skipped: 'NAT skipped',
+    xgs_visible_section: 'XGS Rules — Live View',
+    xgs_visible_sub: 'Refreshes after connection tests and migration runs.',
+    result_section: 'Migration Result',
+    no_visibility: 'No XGS visibility check yet.',
+    no_migration: 'No migration run yet.',
+    nothing_selected: 'Nothing selected yet.',
+    nothing_to_review: 'Nothing to review.',
+    no_objects: 'No dependent objects detected.',
+    no_nat_ready: 'No NAT rules ready.',
+    no_nat_skipped: 'No NAT rules skipped.',
+    no_xgs_rules: 'No XGS rules returned yet.',
+    confirm_migrate: 'Migrate the previewed SG rules into the XGS firewall now?',
+    testing_sg: 'Testing SG connection…',
+    testing_xgs: 'Testing XGS connection…',
+    loading_preview: 'Loading migration preview…',
+    preview_loaded: 'Preview loaded.',
+    running_migration: 'Running migration…',
+    checking_visibility: 'Checking migrated rule visibility on XGS…',
+    settings_saved_sg: 'SG settings saved.',
+    settings_saved_xgs: 'XGS settings saved.',
+    connected_sg: (host, total) => `Connected to SG ${host}. Rules visible: ${total}`,
+    connected_xgs: (host, total) => `Connected to XGS ${host}. Rules visible: ${total}`,
+    visibility_ok: (verified, total) => `Visible on XGS: ${verified}/${total} migrated rule(s) confirmed.`,
+    visibility_err: (verified, total, missing) => `Visible on XGS: ${verified}/${total}. Missing after reload: ${missing}`,
+    visibility_highlight: (visible, total) => `Visible on XGS now: ${visible}/${total} highlighted migrated rule(s).`,
+    needs_review: 'Needs review',
+    eligible_not_selected: 'Eligible but not selected',
+  },
+  ko: {
+    title: 'Sophos 마이그레이션',
+    sub: 'Sophos SG 방화벽 규칙을 XGS로 마이그레이션',
+    sg_section: '소스 — Sophos SG',
+    xgs_section: '대상 — Sophos XGS',
+    lbl_host: 'IP / 호스트',
+    lbl_port: '포트',
+    lbl_user: '사용자명',
+    lbl_pass: '비밀번호',
+    lbl_sg_token: 'API 토큰',
+    lbl_xgs_token: '토큰 / 메모',
+    btn_save: '설정 저장',
+    btn_test_sg: 'SG 테스트',
+    btn_test_xgs: 'XGS 테스트',
+    btn_preview: '미리보기',
+    btn_migrate: '마이그레이션 →',
+    sg_ready: 'SG 설정이 준비되었습니다.',
+    xgs_ready: 'XGS 설정이 준비되었습니다.',
+    preview_section: '마이그레이션 미리보기',
+    kpi_policy: '선택된 정책',
+    kpi_object: '객체',
+    kpi_nat: 'NAT 규칙',
+    note: '이 미리보기는 마이그레이션을 정책, 객체, NAT 규칙의 세 그룹으로 구분합니다. 정책은 선택 가능합니다. 객체는 정책/NAT 종속성에서 파생됩니다. NAT 규칙은 별도로 표시됩니다.',
+    selected_policies: '마이그레이션할 정책',
+    select_all: '모두 선택',
+    not_selected: '건너뜀 / 검토 필요',
+    objects_to_migrate: '객체',
+    nat_to_migrate: 'NAT 규칙',
+    nat_skipped: 'NAT 건너뜀',
+    xgs_visible_section: 'XGS 규칙 — 실시간 보기',
+    xgs_visible_sub: '연결 테스트 및 마이그레이션 실행 후 새로 고쳐집니다.',
+    result_section: '마이그레이션 결과',
+    no_visibility: 'XGS 가시성 확인이 아직 없습니다.',
+    no_migration: '마이그레이션 실행이 아직 없습니다.',
+    nothing_selected: '아직 선택된 항목이 없습니다.',
+    nothing_to_review: '검토할 항목이 없습니다.',
+    no_objects: '종속 객체가 감지되지 않았습니다.',
+    no_nat_ready: '준비된 NAT 규칙이 없습니다.',
+    no_nat_skipped: '건너뛴 NAT 규칙이 없습니다.',
+    no_xgs_rules: '아직 XGS 규칙이 반환되지 않았습니다.',
+    confirm_migrate: '미리보기된 SG 규칙을 XGS 방화벽으로 지금 마이그레이션하시겠습니까?',
+    testing_sg: 'SG 연결 테스트 중…',
+    testing_xgs: 'XGS 연결 테스트 중…',
+    loading_preview: '마이그레이션 미리보기 로딩 중…',
+    preview_loaded: '미리보기가 로드되었습니다.',
+    running_migration: '마이그레이션 실행 중…',
+    checking_visibility: 'XGS에서 마이그레이션된 규칙 가시성 확인 중…',
+    settings_saved_sg: 'SG 설정이 저장되었습니다.',
+    settings_saved_xgs: 'XGS 설정이 저장되었습니다.',
+    connected_sg: (host, total) => `SG ${host}에 연결됨. 표시 규칙: ${total}`,
+    connected_xgs: (host, total) => `XGS ${host}에 연결됨. 표시 규칙: ${total}`,
+    visibility_ok: (verified, total) => `XGS에서 표시됨: ${verified}/${total}개 확인됨.`,
+    visibility_err: (verified, total, missing) => `XGS에서 표시됨: ${verified}/${total}. 누락: ${missing}`,
+    visibility_highlight: (visible, total) => `현재 XGS 표시: ${visible}/${total}개 강조됨.`,
+    needs_review: '검토 필요',
+    eligible_not_selected: '적합하지만 미선택',
+  },
+};
+
+let currentLang = 'en';
+function T(key, ...args) {
+  const val = (LANG[currentLang] || LANG.en)[key] || LANG.en[key] || key;
+  return typeof val === 'function' ? val(...args) : val;
+}
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  $('lang-en').classList.toggle('active', lang === 'en');
+  $('lang-ko').classList.toggle('active', lang === 'ko');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+}
+
+function dataFromForm() {
   return {
-    sg: { host: $('sg-host').value.trim(), port: Number($('sg-port').value||4444), username: $('sg-user').value.trim(), password: $('sg-pass').value, token: $('sg-token').value.trim() },
-    xgs:{ host: $('xgs-host').value.trim(), port: Number($('xgs-port').value||5553), username: $('xgs-user').value.trim(), password: $('xgs-pass').value, token: $('xgs-token').value.trim() }
+    sg:  { host: $('sg-host').value.trim(),  port: Number($('sg-port').value  || 4444), username: $('sg-user').value.trim(),  password: $('sg-pass').value,  token: $('sg-token').value.trim()  },
+    xgs: { host: $('xgs-host').value.trim(), port: Number($('xgs-port').value || 5553), username: $('xgs-user').value.trim(), password: $('xgs-pass').value, token: $('xgs-token').value.trim() },
   };
 }
-function fill(cfg){
+function fill(cfg) {
   const sg = cfg.sg || {}, xgs = cfg.xgs || {};
-  $('sg-host').value = sg.host || ''; $('sg-port').value = sg.port || 4444; $('sg-user').value = sg.username || ''; $('sg-pass').value = sg.password || ''; $('sg-token').value = sg.token || '';
+  $('sg-host').value  = sg.host  || '';  $('sg-port').value  = sg.port  || 4444; $('sg-user').value  = sg.username  || ''; $('sg-pass').value  = sg.password  || ''; $('sg-token').value  = sg.token  || '';
   $('xgs-host').value = xgs.host || ''; $('xgs-port').value = xgs.port || 5553; $('xgs-user').value = xgs.username || ''; $('xgs-pass').value = xgs.password || ''; $('xgs-token').value = xgs.token || '';
 }
-async function api(path, method='GET', body){
-  const res = await fetch(API + path, { method, headers: { 'Content-Type':'application/json' }, body: body ? JSON.stringify(body) : undefined });
-  const data = await res.json().catch(()=>({ ok:false, error:'Invalid JSON response' }));
-  if(!res.ok && !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+async function api(path, method = 'GET', body) {
+  const res = await fetch(API + path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({ ok: false, error: 'Invalid JSON response' }));
+  if (!res.ok && !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
 }
-function setStatus(id, text, kind='info'){ const el=$(id); el.className='status '+kind; el.textContent=text; }
-function setVisibilityStatus(text, kind='info'){ const el=$('visibility-status'); el.className='status '+kind; el.textContent=text; }
-function ruleSummary(item){
-  const svc = item.service ? ` · service ${item.service}` : '';
-  if (item.direction === 'src') return `${item.action.toUpperCase()} source ${item.sourceLabel || item.ip}${svc}`;
-  if (item.direction === 'dst') return `${item.action.toUpperCase()} destination ${item.destinationLabel || item.ip}${svc}`;
-  if (item.direction === 'both') return `${item.action.toUpperCase()} source ${item.sourceLabel || item.sourceIp} → destination ${item.destinationLabel || item.destinationIp}${svc}`;
-  if (item.direction === 'any') return `${item.action.toUpperCase()} any source → any destination${svc || ' · any service'}`;
-  return item.reason || 'Needs review';
+function setStatus(id, text, kind = 'info') { const el = $(id); el.className = 'status-bar ' + kind; el.textContent = text; }
+function setVisibilityStatus(text, kind = 'info') { const el = $('visibility-status'); el.className = 'status-bar ' + kind; el.textContent = text; }
+
+function ruleSummary(item) {
+  const svc = item.service ? ` · ${item.service}` : '';
+  if (item.direction === 'src')  return `${item.action.toUpperCase()} ← ${item.sourceLabel || item.ip}${svc}`;
+  if (item.direction === 'dst')  return `${item.action.toUpperCase()} → ${item.destinationLabel || item.ip}${svc}`;
+  if (item.direction === 'both') return `${item.action.toUpperCase()} ${item.sourceLabel || item.sourceIp} → ${item.destinationLabel || item.destinationIp}${svc}`;
+  if (item.direction === 'any')  return `${item.action.toUpperCase()} any → any${svc || ' · any service'}`;
+  return item.reason || T('needs_review');
 }
-function escAttr(v){ return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function syncSelectAll(){
+function escAttr(v) { return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function syncSelectAll() {
   const eligible = previewState.migratable || [];
   const all = $('select-all-rules');
   if (!all) return;
-  const selectedEligible = eligible.filter(item => selectedRuleNames.has(item.name)).length;
-  all.checked = !!eligible.length && selectedEligible === eligible.length;
-  all.indeterminate = selectedEligible > 0 && selectedEligible < eligible.length;
+  const sel = eligible.filter(i => selectedRuleNames.has(i.name)).length;
+  all.checked = !!eligible.length && sel === eligible.length;
+  all.indeterminate = sel > 0 && sel < eligible.length;
 }
-function toggleRuleSelection(name, checked){
-  if (checked) selectedRuleNames.add(name);
-  else selectedRuleNames.delete(name);
+function toggleRuleSelection(name, checked) {
+  if (checked) selectedRuleNames.add(name); else selectedRuleNames.delete(name);
   renderPreview(previewState);
 }
 window.toggleRuleSelection = toggleRuleSelection;
-function renderPreview(preview){
+
+function ruleItemHtml(item, checked, disabled) {
+  return `<div class="rule-item">
+    <label class="rule-item-label" style="${disabled ? 'opacity:.65' : ''}">
+      <input type="checkbox" data-rule-name="${escAttr(item.name)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleRuleSelection(this.dataset.ruleName,this.checked)">
+      <span><div class="rule-name">${item.name}</div><div class="rule-detail">${item.reason || ruleSummary(item)}</div></span>
+    </label>
+  </div>`;
+}
+
+function renderPreview(preview) {
   previewState = preview || { total: 0, migratable: [], skipped: [] };
   const migratable = previewState.migratable || [];
   const skipped = previewState.skipped || [];
-  if (!selectedRuleNames.size) migratable.forEach(item => selectedRuleNames.add(item.name));
-  selectedRuleNames = new Set([...selectedRuleNames].filter(name => migratable.some(item => item.name === name)));
-  const selectedItems = migratable.filter(item => selectedRuleNames.has(item.name));
-  const unselectedEligible = migratable.filter(item => !selectedRuleNames.has(item.name)).map(item => ({ ...item, reason: 'Eligible but not selected', selectable: true }));
-  const skippedItems = [...unselectedEligible, ...skipped];
-  $('k-policy-total').textContent = selectedItems.length;
-  $('ready-list').innerHTML = selectedItems.length ? selectedItems.map(item => `
-    <div class="item">
-      <label style="display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--text)">
-        <input type="checkbox" style="width:auto;margin-top:2px" checked data-rule-name="${escAttr(item.name)}" onchange="toggleRuleSelection(this.dataset.ruleName, this.checked)">
-        <span><b>${item.name}</b><div>${ruleSummary(item)}</div></span>
-      </label>
-    </div>`).join('') : '<div class="item">Nothing selected yet.</div>';
-  $('skip-list').innerHTML = skippedItems.length ? skippedItems.map(item => `
-    <div class="item">
-      <label style="display:flex;gap:10px;align-items:flex-start;margin:0;color:var(--text);opacity:${item.selectable === false ? '.72' : '1'}">
-        <input type="checkbox" style="width:auto;margin-top:2px" data-rule-name="${escAttr(item.name)}" ${item.selectable === false ? 'disabled' : ''} ${selectedRuleNames.has(item.name) ? 'checked' : ''} onchange="toggleRuleSelection(this.dataset.ruleName, this.checked)">
-        <span><b>${item.name}</b><div>${item.reason || ruleSummary(item)}</div></span>
-      </label>
-    </div>`).join('') : '<div class="item">Nothing to review.</div>';
+  if (!selectedRuleNames.size) migratable.forEach(i => selectedRuleNames.add(i.name));
+  selectedRuleNames = new Set([...selectedRuleNames].filter(n => migratable.some(i => i.name === n)));
+  const selected = migratable.filter(i => selectedRuleNames.has(i.name));
+  const unselected = migratable.filter(i => !selectedRuleNames.has(i.name)).map(i => ({ ...i, reason: T('eligible_not_selected'), selectable: true }));
+  $('k-policy-total').textContent = selected.length;
+  $('ready-list').innerHTML = selected.length
+    ? selected.map(i => ruleItemHtml(i, true, false)).join('')
+    : `<div class="rule-empty">${T('nothing_selected')}</div>`;
+  const skippedAll = [...unselected, ...skipped];
+  $('skip-list').innerHTML = skippedAll.length
+    ? skippedAll.map(i => ruleItemHtml(i, selectedRuleNames.has(i.name), i.selectable === false)).join('')
+    : `<div class="rule-empty">${T('nothing_to_review')}</div>`;
   syncSelectAll();
 }
-function renderObjectPreview(preview){
+
+function renderObjectPreview(preview) {
   objectPreviewState = preview || { total: 0, migratable: [], skipped: [] };
   $('k-object-total').textContent = objectPreviewState.total || 0;
   $('object-list').innerHTML = (objectPreviewState.migratable || []).length
-    ? objectPreviewState.migratable.map(item => `<div class="item"><b>${item.name || 'Unnamed object'}</b><div>${item.kind || 'object'}${item.usage ? ` · ${item.usage}` : ''}</div></div>`).join('')
-    : '<div class="item">No dependent objects detected.</div>';
+    ? objectPreviewState.migratable.map(i => `<div class="rule-item"><div class="rule-name">${i.name || 'Unnamed'}</div><div class="rule-detail">${i.kind || 'object'}${i.usage ? ' · ' + i.usage : ''}</div></div>`).join('')
+    : `<div class="rule-empty">${T('no_objects')}</div>`;
 }
-function renderNatPreview(preview){
+
+function renderNatPreview(preview) {
   natPreviewState = preview || { total: 0, migratable: [], skipped: [] };
   $('k-nat-total').textContent = (natPreviewState.migratable || []).length;
   $('nat-ready-list').innerHTML = (natPreviewState.migratable || []).length
-    ? natPreviewState.migratable.map(item => `<div class="item"><b>${item.name}</b><div>${String(item.kind || 'nat').toUpperCase()}${item.comment ? ` · ${item.comment}` : ''}</div></div>`).join('')
-    : '<div class="item">No NAT rules ready.</div>';
+    ? natPreviewState.migratable.map(i => `<div class="rule-item"><div class="rule-name">${i.name}</div><div class="rule-detail">${String(i.kind||'nat').toUpperCase()}${i.comment?' · '+i.comment:''}</div></div>`).join('')
+    : `<div class="rule-empty">${T('no_nat_ready')}</div>`;
   $('nat-skip-list').innerHTML = (natPreviewState.skipped || []).length
-    ? natPreviewState.skipped.map(item => `<div class="item"><b>${item.name}</b><div>${item.reason || 'Needs review'}</div></div>`).join('')
-    : '<div class="item">No NAT rules skipped.</div>';
+    ? natPreviewState.skipped.map(i => `<div class="rule-item"><div class="rule-name">${i.name}</div><div class="rule-detail">${i.reason || T('needs_review')}</div></div>`).join('')
+    : `<div class="rule-empty">${T('no_nat_skipped')}</div>`;
 }
-function renderXgsRules(rules = [], highlightNames = []){
+
+function renderXgsRules(rules = [], highlightNames = []) {
   const el = $('xgs-rules-list');
   const wanted = new Set((highlightNames || []).filter(Boolean));
-  const ordered = [...rules].sort((a,b) => Number(wanted.has(b.name)) - Number(wanted.has(a.name)) || String(a.name||'').localeCompare(String(b.name||'')));
+  const ordered = [...rules].sort((a, b) => Number(wanted.has(b.name)) - Number(wanted.has(a.name)) || String(a.name||'').localeCompare(String(b.name||'')));
   el.innerHTML = ordered.length ? ordered.map(rule => {
     const hit = wanted.has(rule.name);
-    const chips = [rule.action, rule.status].filter(Boolean).map(v => `<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:${hit ? 'rgba(47,177,113,.22)' : 'rgba(104,160,255,.12)'};border:1px solid ${hit ? 'rgba(47,177,113,.45)' : 'rgba(104,160,255,.28)'};margin-right:6px;font-size:11px">${v}</span>`).join('');
+    const chips = [rule.action, rule.status].filter(Boolean).map(v => `<span class="chip ${hit ? 'chip-good' : 'chip-default'}">${v}</span>`).join('');
     const src = (rule.sources || []).join(', ') || 'Any';
     const dst = (rule.destinations || []).join(', ') || 'Any';
-    const desc = rule.description || '';
-    return `<div class="item" style="${hit ? 'border-color:rgba(47,177,113,.55);box-shadow:0 0 0 1px rgba(47,177,113,.18) inset;background:rgba(47,177,113,.06)' : ''}"><b>${hit ? '✓ ' : ''}${rule.name}</b><div style="margin:6px 0">${chips}</div><div>Source: ${src}</div><div>Destination: ${dst}</div>${desc ? `<div class="muted" style="margin-top:6px">${desc}</div>` : ''}</div>`;
-  }).join('') : '<div class="item">No XGS rules returned yet.</div>';
+    return `<div class="rule-item${hit ? ' highlighted' : ''}">
+      <div class="rule-name">${hit ? '✓ ' : ''}${rule.name}</div>
+      <div style="margin:5px 0">${chips}</div>
+      <div class="rule-detail">Src: ${src} &nbsp;→&nbsp; Dst: ${dst}</div>
+      ${rule.description ? `<div class="rule-detail" style="margin-top:4px;color:var(--text3)">${rule.description}</div>` : ''}
+    </div>`;
+  }).join('') : `<div class="rule-empty">${T('no_xgs_rules')}</div>`;
 }
-async function loadXgsRules(highlightNames = []){
+
+async function loadXgsRules(highlightNames = []) {
   try {
-    const data = await api('/migration/xgs-rules','POST',{ xgs:dataFromForm().xgs });
+    const data = await api('/migration/xgs-rules', 'POST', { xgs: dataFromForm().xgs });
     renderXgsRules(data.rules || [], highlightNames);
-    if (highlightNames.length) setVisibilityStatus(`Visible on XGS now: ${highlightNames.filter(name => (data.rules || []).some(rule => rule.name === name)).length}/${highlightNames.length} highlighted migrated rule(s).`, 'ok');
+    if (highlightNames.length) setVisibilityStatus(T('visibility_highlight', highlightNames.filter(n => (data.rules||[]).some(r => r.name===n)).length, highlightNames.length), 'ok');
     return data.rules || [];
   } catch (e) {
-    $('xgs-rules-list').innerHTML = `<div class="item">${e.message}</div>`;
+    $('xgs-rules-list').innerHTML = `<div class="rule-empty">${e.message}</div>`;
     if (highlightNames.length) setVisibilityStatus(e.message, 'err');
     return [];
   }
 }
-async function loadConfig(){
-  const data = await api('/migration/config');
+
+async function loadConfig() { const data = await api('/migration/config'); fill(data.config || {}); }
+async function saveConfig() {
+  const data = await api('/migration/config', 'POST', dataFromForm());
   fill(data.config || {});
+  setStatus('sg-status',  T('settings_saved_sg'),  'ok');
+  setStatus('xgs-status', T('settings_saved_xgs'), 'ok');
 }
-async function saveConfig(){
-  const data = await api('/migration/config','POST',dataFromForm());
-  fill(data.config || {});
-  setStatus('sg-status','SG settings saved.','ok');
-  setStatus('xgs-status','XGS settings saved.','ok');
-}
-async function testSG(){
-  setStatus('sg-status','Testing SG connection…');
+async function testSG() {
+  setStatus('sg-status', T('testing_sg'));
   try {
-    const data = await api('/migration/test-sg','POST',{ sg:dataFromForm().sg });
-    setStatus('sg-status',`Connected to SG ${data.host}. Rules visible: ${data.total_rules ?? 0}`,'ok');
-  } catch (e) { setStatus('sg-status',e.message,'err'); }
+    const data = await api('/migration/test-sg', 'POST', { sg: dataFromForm().sg });
+    setStatus('sg-status', T('connected_sg', data.host, data.total_rules ?? 0), 'ok');
+  } catch (e) { setStatus('sg-status', e.message, 'err'); }
 }
-async function testXGS(){
-  setStatus('xgs-status','Testing XGS connection…');
+async function testXGS() {
+  setStatus('xgs-status', T('testing_xgs'));
   try {
-    const data = await api('/migration/test-xgs','POST',{ xgs:dataFromForm().xgs });
-    setStatus('xgs-status',`Connected to XGS ${data.host}. Rules visible: ${data.total_rules ?? 0}`,'ok');
+    const data = await api('/migration/test-xgs', 'POST', { xgs: dataFromForm().xgs });
+    setStatus('xgs-status', T('connected_xgs', data.host, data.total_rules ?? 0), 'ok');
     await loadXgsRules();
-  } catch (e) { setStatus('xgs-status',e.message,'err'); }
+  } catch (e) { setStatus('xgs-status', e.message, 'err'); }
 }
-async function preview(){
-  $('run-result').textContent = 'Loading migration preview…';
+async function preview() {
+  $('run-result').textContent = T('loading_preview');
   try {
-    const data = await api('/migration/preview','POST',{ sg:dataFromForm().sg });
-    selectedRuleNames = new Set((data.preview?.migratable || []).map(item => item.name));
+    const data = await api('/migration/preview', 'POST', { sg: dataFromForm().sg });
+    selectedRuleNames = new Set((data.preview?.migratable || []).map(i => i.name));
     renderPreview(data.preview || {});
     renderObjectPreview(data.objectPreview || {});
     renderNatPreview(data.natPreview || {});
-    $('run-result').textContent = 'Preview loaded.';
-  } catch (e) {
-    $('run-result').textContent = e.message;
-  }
+    $('run-result').textContent = T('preview_loaded');
+  } catch (e) { $('run-result').textContent = e.message; }
 }
-async function migrate(){
-  if(!confirm('Migrate the previewed SG rules into the XGS firewall now?')) return;
-  $('run-result').textContent = 'Running migration…';
-  setVisibilityStatus('Checking migrated rule visibility on XGS…','info');
+async function migrate() {
+  if (!confirm(T('confirm_migrate'))) return;
+  $('run-result').textContent = T('running_migration');
+  setVisibilityStatus(T('checking_visibility'), 'info');
   try {
-    const data = await api('/migration/run','POST',{ ...dataFromForm(), selectedRules:[...selectedRuleNames] });
-    const applied = data.applied || [];
-    const failed = data.failed || [];
-    const names = applied.map(item => item.targetRule).filter(Boolean);
+    const data = await api('/migration/run', 'POST', { ...dataFromForm(), selectedRules: [...selectedRuleNames] });
+    const applied = data.applied || [], failed = data.failed || [];
+    const names = applied.map(i => i.targetRule).filter(Boolean);
     const visibility = data.visibility || { verified: [], missing: [] };
-    renderPreview((data.preview) || { total:0, migratable:[], skipped:[] });
+    renderPreview(data.preview || { total: 0, migratable: [], skipped: [] });
     renderObjectPreview(data.objectPreview || {});
     renderNatPreview(data.natPreview || {});
     await loadXgsRules(visibility.verified.length ? visibility.verified : names);
     if (visibility.missing?.length) {
-      setVisibilityStatus(`Visible on XGS: ${visibility.verified.length}/${names.length}. Missing after reload: ${visibility.missing.join(', ')}`, 'err');
+      setVisibilityStatus(T('visibility_err', visibility.verified.length, names.length, visibility.missing.join(', ')), 'err');
     } else {
-      setVisibilityStatus(`Visible on XGS: ${visibility.verified.length}/${names.length} migrated rule(s) confirmed.`, 'ok');
+      setVisibilityStatus(T('visibility_ok', visibility.verified.length, names.length), 'ok');
     }
-    $('run-result').textContent = JSON.stringify({ applied_count: applied.length, failed_count: failed.length, object_count: (data.objects?.ensured || []).length, nat_applied_count: (data.nat?.applied || []).length, nat_failed_count: (data.nat?.failed || []).length, visibility, applied, failed, objects: data.objects, nat: data.nat }, null, 2);
+    $('run-result').textContent = JSON.stringify({ applied_count: applied.length, failed_count: failed.length, object_count: (data.objects?.ensured||[]).length, nat_applied_count: (data.nat?.applied||[]).length, nat_failed_count: (data.nat?.failed||[]).length, visibility, applied, failed, objects: data.objects, nat: data.nat }, null, 2);
   } catch (e) {
     setVisibilityStatus(e.message, 'err');
     $('run-result').textContent = e.message;
   }
 }
+
 $('save-config').onclick = saveConfig;
 $('test-sg').onclick = testSG;
 $('test-xgs').onclick = testXGS;
 $('preview').onclick = preview;
 $('migrate').onclick = migrate;
 $('select-all-rules').onchange = e => {
-  if (e.target.checked) selectedRuleNames = new Set((previewState.migratable || []).map(item => item.name));
+  if (e.target.checked) selectedRuleNames = new Set((previewState.migratable || []).map(i => i.name));
   else selectedRuleNames = new Set();
   renderPreview(previewState);
 };
+
 loadConfig().then(() => loadXgsRules()).catch(err => { $('run-result').textContent = err.message; });
 renderObjectPreview({ total: 0, migratable: [], skipped: [] });
 renderNatPreview({ total: 0, migratable: [], skipped: [] });
